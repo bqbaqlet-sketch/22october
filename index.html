@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Год дружбы</title>
+<style>
+  :root{
+    --bg1:#0d1321;
+    --bg2:#1d2d44;
+    --accent:#e63946;
+    --gold:#f4a261;
+    --text:#f1f5f9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:"Trebuchet MS","Segoe UI",Roboto,Arial,sans-serif;
+    color:var(--text);
+    background:radial-gradient(circle at 30% 20%,var(--bg2),var(--bg1) 70%);
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ---- сердечки на фоне ---- */
+  #hearts{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .heart{
+    position:absolute;bottom:-40px;
+    animation:floatUp linear forwards;
+    opacity:.0;
+  }
+  @keyframes floatUp{
+    0%{transform:translateY(0) rotate(0deg);opacity:0}
+    10%{opacity:.55}
+    100%{transform:translateY(-115vh) rotate(25deg);opacity:0}
+  }
+
+  /* ---- страницы ---- */
+  .page{
+    position:absolute;inset:0;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px;text-align:center;z-index:1;
+  }
+  .page.active{display:flex;animation:fade .7s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  h1{
+    font-size:clamp(2.2rem,8vw,4rem);
+    letter-spacing:1px;text-transform:uppercase;
+    text-shadow:0 4px 24px rgba(230,57,70,.45);
+  }
+  .text{
+    font-size:clamp(1.2rem,4.5vw,1.9rem);
+    line-height:1.5;max-width:640px;
+  }
+  .text b{color:var(--gold)}
+
+  .btn{
+    margin-top:32px;
+    padding:14px 38px;
+    font-size:1.2rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+    color:#fff;background:linear-gradient(135deg,var(--accent),#b02a37);
+    border:2px solid rgba(255,255,255,.15);border-radius:12px;
+    cursor:pointer;box-shadow:0 8px 24px rgba(230,57,70,.35);
+    transition:transform .15s,box-shadow .15s;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(230,57,70,.5)}
+  .btn:active{transform:scale(.96)}
+  .btn.ghost{
+    background:transparent;border-color:rgba(255,255,255,.45);box-shadow:none;
+  }
+
+  /* ---- страница 2 ---- */
+  .photo-frame{
+    width:min(86vw,380px);aspect-ratio:3/4;max-height:52vh;
+    border-radius:16px;overflow:hidden;
+    border:3px solid var(--gold);
+    box-shadow:0 14px 40px rgba(0,0,0,.55);
+    background:#0a0f1a;
+  }
+  .photo-frame img{width:100%;height:100%;object-fit:cover;display:block;animation:fade .5s ease}
+  .question{margin-top:20px;font-size:clamp(1.8rem,6vw,2.6rem);font-weight:800}
+  .row{display:flex;gap:16px;justify-content:center;align-items:center;min-height:70px}
+  .row .btn{margin-top:14px}
+
+  /* убегающая кнопка */
+  #noBtn.running{
+    position:fixed;z-index:50;margin:0;
+    transition:left .45s cubic-bezier(.3,1.4,.5,1),top .45s cubic-bezier(.3,1.4,.5,1);
+  }
+</style>
+</head>
+<body>
+
+<div id="hearts"></div>
+
+<!-- Страница 1 -->
+<section class="page active" id="page1">
+  <div id="p1text"><h1>Привет друг!</h1></div>
+  <button class="btn" id="p1btn">Привет</button>
+</section>
+
+<!-- Страница 2 -->
+<section class="page" id="page2">
+  <div class="photo-frame"><img id="photo" alt="Наше фото"></div>
+  <div class="question">Мы?</div>
+  <div class="row" id="row">
+    <button class="btn" id="yesBtn">Мы</button>
+    <button class="btn ghost" id="noBtn">Нет</button>
+  </div>
+</section>
+
+<!-- Страница 3 -->
+<section class="page" id="page3">
+  <p class="text">Прими этот сайт как подарок в честь года дружбы.<br><br><b>А ты что мне подаришь?</b></p>
+</section>
+
+<script>
+/* =====================================================
+   ТУТ МЕНЯЕШЬ ФОТО — положи 4 картинки рядом с index.html
+   и впиши их названия (или ссылки) вместо примеров.
+   ===================================================== */
+const PHOTOS = [
+  "https://i.ibb.co.com/8D9gDndR/IMG-3076.jpg,
+  "https://i.ibb.co.com/Ly3n5yt/IMG-3077.jpg",
+  "https://i.ibb.co.com/rGzCqy1z/IMG-3078.jpg",
+  "https://i.ibb.co.com/35cKPYy0/IMG-3079.jpg"
+];
+
+/* ---------- заглушка, если фото ещё нет ---------- */
+function placeholder(n){
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'>
+    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+    <stop offset='0' stop-color='#1d2d44'/><stop offset='1' stop-color='#0d1321'/></linearGradient></defs>
+    <rect width='600' height='800' fill='url(#g)'/>
+    <text x='300' y='390' font-size='64' text-anchor='middle' fill='#f4a261' font-family='Arial' font-weight='bold'>Фото ${n}</text>
+    <text x='300' y='450' font-size='28' text-anchor='middle' fill='#cbd5e1' font-family='Arial'>впиши путь в PHOTOS</text>
+  </svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+
+const photoEl = document.getElementById("photo");
+let photoIndex = 0;
+function showPhoto(){
+  photoEl.onerror = () => { photoEl.onerror = null; photoEl.src = placeholder(photoIndex + 1); };
+  photoEl.style.animation = "none"; void photoEl.offsetWidth; photoEl.style.animation = "";
+  photoEl.src = PHOTOS[photoIndex] || placeholder(photoIndex + 1);
+}
+
+/* ---------- переключение страниц ---------- */
+function goTo(id){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+/* ---------- страница 1 ---------- */
+const p1btn = document.getElementById("p1btn");
+const p1text = document.getElementById("p1text");
+let p1step = 0;
+p1btn.addEventListener("click", () => {
+  if (p1step === 0){
+    p1text.innerHTML = '<p class="text">Сегодня <b>22 октября</b>.<br>Ровно год с момента, как мы начали с тобой общение.<br><br>Спасибо, что был со мной.</p>';
+    p1btn.textContent = "Далее";
+    p1step = 1;
+  } else {
+    goTo("page2");
+    showPhoto();
+  }
+});
+
+/* ---------- страница 2 ---------- */
+const yesBtn = document.getElementById("yesBtn");
+const noBtn  = document.getElementById("noBtn");
+const row    = document.getElementById("row");
+let noClicks = 0, runTimer = null, noGone = false;
+
+function next(){
+  // на 4-й картинке любое нажатие ведёт на 3-ю страницу
+  if (photoIndex >= PHOTOS.length - 1){
+    goTo("page3");
+  } else {
+    photoIndex++;
+    showPhoto();
+  }
+}
+yesBtn.addEventListener("click", next);
+
+function moveNo(){
+  const w = noBtn.offsetWidth, h = noBtn.offsetHeight, m = 10;
+  const x = m + Math.random() * (window.innerWidth  - w - m*2);
+  const y = m + Math.random() * (window.innerHeight - h - m*2);
+  noBtn.style.left = x + "px";
+  noBtn.style.top  = y + "px";
+}
+
+function startRunning(){
+  if (!noBtn.classList.contains("running")){
+    const r = noBtn.getBoundingClientRect();
+    // placeholder чтобы кнопка «Мы» не прыгала
+    const ph = document.createElement("div");
+    ph.id = "noPh"; ph.style.width = r.width + "px"; ph.style.height = r.height + "px";
+    row.appendChild(ph);
+    noBtn.classList.add("running");
+    noBtn.style.left = r.left + "px";
+    noBtn.style.top  = r.top + "px";
+    void noBtn.offsetWidth;
+  }
+  clearInterval(runTimer);
+  runTimer = setInterval(moveNo, 1100);
+  moveNo();
+}
+
+function returnHome(){
+  clearInterval(runTimer);
+  noBtn.classList.remove("running");
+  noBtn.style.left = noBtn.style.top = "";
+  const ph = document.getElementById("noPh"); if (ph) ph.remove();
+  noBtn.textContent = "Да";
+  noBtn.classList.remove("ghost");
+  noGone = true;
+}
+
+noBtn.addEventListener("click", () => {
+  if (noGone){ next(); return; }
+  noClicks++;
+  if (noClicks >= 4){
+    returnHome();
+  } else {
+    startRunning();
+  }
+});
+
+/* ---------- сердечки на фоне ---------- */
+const heartsBox = document.getElementById("hearts");
+const colors = ["#e63946","#f4a261","#7aa2d6","#c9184a"];
+function spawnHeart(){
+  const h = document.createElement("div");
+  h.className = "heart";
+  h.textContent = "❤";
+  const size = 14 + Math.random() * 30;
+  h.style.left = Math.random() * 100 + "vw";
+  h.style.fontSize = size + "px";
+  h.style.color = colors[Math.floor(Math.random() * colors.length)];
+  const dur = 6 + Math.random() * 6;
+  h.style.animationDuration = dur + "s";
+  heartsBox.appendChild(h);
+  setTimeout(() => h.remove(), dur * 1000);
+}
+setInterval(spawnHeart, 450);
+for (let i = 0; i < 8; i++) setTimeout(spawnHeart, i * 150);
+</script>
+</body>
+</html>
